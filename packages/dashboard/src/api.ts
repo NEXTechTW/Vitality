@@ -170,37 +170,154 @@ function cacheSet<T>(key: string, data: T): void {
 
 const GH_API = 'https://api.github.com';
 
-function getHeaders(): HeadersInit {
+export function sanitizeToken(raw?: string | null): string | null {
+  if (!raw) return null;
+  let t = raw.trim().replace(/^["']|["']$/g, '').trim();
+  if (t.toLowerCase().startsWith('bearer ')) {
+    t = t.slice(7).trim();
+  } else if (t.toLowerCase().startsWith('token ')) {
+    t = t.slice(6).trim();
+  }
+  return t || null;
+}
+
+export function getStoredGitHubToken(): string | null {
+  try {
+    const fromStorage =
+      localStorage.getItem('vitality_github_token') ||
+      localStorage.getItem('github_token');
+    if (fromStorage) return sanitizeToken(fromStorage);
+
+    // Also check Vite environment variables if defined
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      const fromEnv = (import.meta.env.VITE_GITHUB_TOKEN as string | undefined) ||
+                      (import.meta.env.GITHUB_TOKEN as string | undefined);
+      if (fromEnv) return sanitizeToken(fromEnv);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function getHeaders(): HeadersInit {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
-    'User-Agent': 'Vitality-Dashboard',
+    'X-GitHub-Api-Version': '2022-11-28',
   };
-  try {
-    const token = localStorage.getItem('vitality_github_token');
-    if (token && token.trim()) {
-      headers.Authorization = `Bearer ${token.trim()}`;
-    }
-  } catch {
-    // ignore
+
+  const token = getStoredGitHubToken();
+  if (token) {
+    // Fine-grained PATs start with github_pat_ and use Bearer
+    // Classic PATs start with ghp_ and use token or Bearer
+    const authScheme = token.startsWith('github_pat_') ? 'Bearer' : 'token';
+    headers.Authorization = `${authScheme} ${token}`;
   }
   return headers;
+}
+
+export interface TokenVerificationResult {
+  valid: boolean;
+  limit: number;
+  remaining: number;
+  resetAt: string;
+  error?: string | undefined;
+  username?: string | undefined;
+}
+
+export async function verifyGitHubToken(rawToken: string): Promise<TokenVerificationResult> {
+  const token = sanitizeToken(rawToken);
+  if (!token) {
+    return { valid: false, limit: 0, remaining: 0, resetAt: '', error: 'Token is empty.' };
+  }
+
+  const authScheme = token.startsWith('github_pat_') ? 'Bearer' : 'token';
+  const headers = {
+    Accept: 'application/vnd.github.v3+json',
+    Authorization: `${authScheme} ${token}`,
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+
+  try {
+    const res = await fetch('https://api.github.com/rate_limit', { headers });
+
+    if (res.status === 401) {
+      return { valid: false, limit: 0, remaining: 0, resetAt: '', error: 'Bad credentials (401). Token is invalid or expired.' };
+    }
+    if (!res.ok) {
+      let msg = res.statusText;
+      try {
+        const j = await res.json() as { message?: string };
+        if (j.message) msg = j.message;
+      } catch { /* */ }
+      return { valid: false, limit: 0, remaining: 0, resetAt: '', error: `GitHub error ${res.status}: ${msg}` };
+    }
+
+    const data = await res.json() as {
+      resources?: { core?: { limit: number; remaining: number; reset: number } };
+      rate?: { limit: number; remaining: number; reset: number };
+    };
+
+    const core = data.resources?.core || data.rate;
+    const limit = core?.limit ?? 60;
+    const remaining = core?.remaining ?? 0;
+    const resetAt = core?.reset ? new Date(core.reset * 1000).toLocaleTimeString() : '';
+
+    let username: string | undefined;
+    try {
+      const userRes = await fetch('https://api.github.com/user', { headers });
+      if (userRes.ok) {
+        const u = await userRes.json() as { login?: string };
+        username = u.login;
+      }
+    } catch { /* */ }
+
+    return {
+      valid: true,
+      limit,
+      remaining,
+      resetAt,
+      username,
+    };
+  } catch (err: unknown) {
+    return {
+      valid: false,
+      limit: 0,
+      remaining: 0,
+      resetAt: '',
+      error: err instanceof Error ? err.message : 'Network error verifying token',
+    };
+  }
 }
 
 interface GHResult<T> {
   data: T | null;
   status: number;
+  error?: string | undefined;
+  remaining?: number | undefined;
+  reset?: number | undefined;
 }
 
 async function ghFetch<T>(path: string): Promise<GHResult<T>> {
   try {
     const res = await fetch(`${GH_API}${path}`, { headers: getHeaders() });
+    const remainingHeader = res.headers.get('x-ratelimit-remaining');
+    const resetHeader = res.headers.get('x-ratelimit-reset');
+    const remaining = remainingHeader ? parseInt(remainingHeader, 10) : undefined;
+    const reset = resetHeader ? parseInt(resetHeader, 10) : undefined;
+
     if (!res.ok) {
-      return { data: null, status: res.status };
+      let errorMsg = res.statusText;
+      try {
+        const errJson = await res.json() as { message?: string };
+        if (errJson.message) errorMsg = errJson.message;
+      } catch { /* */ }
+      return { data: null, status: res.status, error: errorMsg, remaining, reset };
     }
     const json = (await res.json()) as T;
-    return { data: json, status: res.status };
-  } catch {
-    return { data: null, status: 0 };
+    return { data: json, status: res.status, remaining, reset };
+  } catch (err: unknown) {
+    return { data: null, status: 0, error: err instanceof Error ? err.message : 'Network error' };
   }
 }
 
