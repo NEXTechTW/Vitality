@@ -21,38 +21,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Need push access
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
+      - name: Setup Node.js (no install needed — uses built-in node:https)
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build CLI
-        run: pnpm --filter @vitality/cli build
-
-      - name: Run Vitality analysis on this repo
+      - name: Compute score using dashboard algorithm
+        id: score
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node packages/cli/dist/bin.js analyze NEXTechTW/Vitality \
-            --token "$GITHUB_TOKEN" \
-            --output vitality.json
-
-      - name: Extract score and update README badge
-        run: |
-          SCORE=$(node -e "const r=require('./vitality.json'); console.log(r.score);")
+          RESULT=$(node scripts/compute-badge-score.mjs NEXTechTW/Vitality)
+          echo "Full result: $RESULT"
+          SCORE=$(echo "$RESULT" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).score));")
+          echo "score=$SCORE" >> "$GITHUB_OUTPUT"
           echo "Computed score: $SCORE"
 
-          # Pick badge colour based on score
+      - name: Update README badge
+        run: |
+          SCORE="${{ steps.score.outputs.score }}"
+
+          # Pick badge colour to match dashboard logic
           if [ "$SCORE" -ge 90 ]; then COLOR="22c55e"
           elif [ "$SCORE" -ge 80 ]; then COLOR="84cc16"
           elif [ "$SCORE" -ge 70 ]; then COLOR="eab308"
@@ -60,20 +51,29 @@ jobs:
           else COLOR="ef4444"
           fi
 
-          BADGE_URL="https://img.shields.io/badge/Vitality_Health-${SCORE}%2F100-${COLOR}?style=flat-square&logo=github"
           PROJECT_URL="https://nextechtw.github.io/Vitality/#/projects/NEXTechTW/Vitality"
-          NEW_BADGE="[![Vitality Health Score](${BADGE_URL})](${PROJECT_URL})"
 
-          # Replace the existing badge line in README.md
-          sed -i "s|^\[\!\[Vitality Health Score\].*|${NEW_BADGE}|" README.md
-
-          echo "Updated README.md badge to score $SCORE"
+          # Safe Python replacement (avoids sed special-character issues)
+          python3 - "$SCORE" "$COLOR" "$PROJECT_URL" <<'PYEOF'
+          import sys, re, pathlib
+          score, color, url = sys.argv[1], sys.argv[2], sys.argv[3]
+          badge_url = f"https://img.shields.io/badge/Vitality_Health-{score}%2F100-{color}?style=flat-square&logo=github"
+          new_line = f"[![Vitality Health Score]({badge_url})]({url})"
+          readme = pathlib.Path("README.md").read_text(encoding="utf-8")
+          # Match the full badge markdown: [![Vitality Health Score](...)](...)
+          readme = re.sub(
+              r'^\[!\[Vitality Health Score\]\(https://img\.shields\.io[^\)]*\)\]\([^\)]*\)',
+              new_line, readme, flags=re.MULTILINE
+          )
+          pathlib.Path("README.md").write_text(readme, encoding="utf-8")
+          print(f"Badge updated to score {score}")
+          PYEOF
 
       - name: Commit and push updated badge
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md vitality.json
-          # Only commit if something changed
+          git add README.md
+          # Only commit if README actually changed
           git diff --cached --quiet || git commit -m "chore: update Vitality badge score [skip ci]"
           git push
