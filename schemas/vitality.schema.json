@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://vitality.dev/schemas/vitality.schema.json",
+  "title": "VitalityReport",
+  "description": "Standardized, versioned open source health report produced by the Vitality scoring engine.",
+  "type": "object",
+  "required": [
+    "protocol_version",
+    "project",
+    "generated_at",
+    "score",
+    "maintenance",
+    "community",
+    "security",
+    "releases",
+    "provenance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "type": "string",
+      "description": "Vitality Protocol version. Bumped on any field added/removed/renamed.",
+      "pattern": "^\\d+\\.\\d+$",
+      "example": "1.0"
+    },
+    "project": {
+      "type": "string",
+      "description": "GitHub owner/repository slug.",
+      "pattern": "^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when this report was generated."
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Overall health score (weighted average of all dimensions)."
+    },
+    "maintenance": {
+      "type": "object",
+      "description": "Maintenance dimension score and sub-metrics.",
+      "required": ["score"],
+      "additionalProperties": false,
+      "properties": {
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "release_frequency": { "type": "number", "minimum": 0, "maximum": 100 },
+        "issue_response": { "type": "number", "minimum": 0, "maximum": 100 },
+        "pull_request_response": { "type": "number", "minimum": 0, "maximum": 100 },
+        "backlog_trend": { "type": "string", "description": "e.g. '+4% (30d)' or '-2% (30d)'" },
+        "breakdown": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ScoreBreakdownItem" }
+        }
+      }
+    },
+    "community": {
+      "type": "object",
+      "description": "Community dimension score and sub-metrics.",
+      "required": ["score"],
+      "additionalProperties": false,
+      "properties": {
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "active_contributors": { "type": "integer", "minimum": 0 },
+        "contributor_growth": { "type": "number", "description": "Percentage change in contributor count over the window." },
+        "contributor_diversity_index": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Gini-coefficient-like measure; 1.0 = perfectly diverse, 0.0 = single contributor."
+        },
+        "breakdown": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ScoreBreakdownItem" }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "description": "Security dimension score and sub-metrics.",
+      "required": ["score"],
+      "additionalProperties": false,
+      "properties": {
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "known_vulnerabilities": { "type": "integer", "minimum": 0 },
+        "dependency_risk": {
+          "type": "string",
+          "enum": ["none", "low", "medium", "high", "critical"]
+        },
+        "last_security_release_days_ago": { "type": "integer", "minimum": 0 },
+        "breakdown": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ScoreBreakdownItem" }
+        }
+      }
+    },
+    "releases": {
+      "type": "object",
+      "description": "Releases dimension score and sub-metrics.",
+      "required": ["score"],
+      "additionalProperties": false,
+      "properties": {
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "frequency": {
+          "type": "string",
+          "enum": ["stale", "infrequent", "healthy", "frequent"]
+        },
+        "stability": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "breaking_change_rate": {
+          "type": "string",
+          "enum": ["none", "low", "medium", "high"]
+        },
+        "breakdown": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ScoreBreakdownItem" }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Audit trail: data sources, computation hash, reproducibility flag.",
+      "required": ["data_sources", "computation_hash", "reproducible"],
+      "additionalProperties": false,
+      "properties": {
+        "data_sources": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "List of data sources used (e.g. 'github_api', 'osv_database')."
+        },
+        "computation_hash": {
+          "type": "string",
+          "description": "SHA-256 hash over normalized input + algorithm version. Used to verify reproducibility.",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "reproducible": {
+          "type": "boolean",
+          "description": "Always true for deterministic engine output."
+        },
+        "algorithm_version": {
+          "type": "string",
+          "description": "Internal scoring algorithm version (semver). Bumped on any weight/threshold change."
+        }
+      }
+    },
+    "ai_report": {
+      "type": "object",
+      "description": "Optional AI-generated narrative. Stored separately from scoring data; never influences the score.",
+      "additionalProperties": false,
+      "properties": {
+        "summary": { "type": "string" },
+        "causes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "generated_by": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "ScoreBreakdownItem": {
+      "type": "object",
+      "required": ["label", "delta"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "description": "Human-readable description of the factor." },
+        "delta": { "type": "number", "description": "Points added (positive) or subtracted (negative)." }
+      }
+    }
+  }
+}
