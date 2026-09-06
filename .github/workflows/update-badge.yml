@@ -1,0 +1,79 @@
+name: Update Vitality Badge
+
+on:
+  # Run after every deploy so badge always reflects latest code
+  workflow_run:
+    workflows: ['Deploy Dashboard to GitHub Pages']
+    types: [completed]
+  # Also run weekly to keep badge fresh
+  schedule:
+    - cron: '0 2 * * 1'
+  # Allow manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-badge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Need push access
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build CLI
+        run: pnpm --filter @vitality/cli build
+
+      - name: Run Vitality analysis on this repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node packages/cli/dist/bin.js analyze NEXTechTW/Vitality \
+            --token "$GITHUB_TOKEN" \
+            --output vitality.json
+
+      - name: Extract score and update README badge
+        run: |
+          SCORE=$(node -e "const r=require('./vitality.json'); console.log(r.score);")
+          echo "Computed score: $SCORE"
+
+          # Pick badge colour based on score
+          if [ "$SCORE" -ge 90 ]; then COLOR="22c55e"
+          elif [ "$SCORE" -ge 80 ]; then COLOR="84cc16"
+          elif [ "$SCORE" -ge 70 ]; then COLOR="eab308"
+          elif [ "$SCORE" -ge 50 ]; then COLOR="f97316"
+          else COLOR="ef4444"
+          fi
+
+          BADGE_URL="https://img.shields.io/badge/Vitality_Health-${SCORE}%2F100-${COLOR}?style=flat-square&logo=github"
+          PROJECT_URL="https://nextechtw.github.io/Vitality/#/projects/NEXTechTW/Vitality"
+          NEW_BADGE="[![Vitality Health Score](${BADGE_URL})](${PROJECT_URL})"
+
+          # Replace the existing badge line in README.md
+          sed -i "s|^\[\!\[Vitality Health Score\].*|${NEW_BADGE}|" README.md
+
+          echo "Updated README.md badge to score $SCORE"
+
+      - name: Commit and push updated badge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md vitality.json
+          # Only commit if something changed
+          git diff --cached --quiet || git commit -m "chore: update Vitality badge score [skip ci]"
+          git push
