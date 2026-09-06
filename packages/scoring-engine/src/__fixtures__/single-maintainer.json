@@ -1,0 +1,36 @@
+{
+  "_description": "A project maintained by a single hyperactive person — fast responses but low diversity.",
+  "project": "single/maintainer",
+  "windowDays": 90,
+  "maintenance": {
+    "avgIssueFirstResponseHours": 8,
+    "issueResolutionRate": 0.70,
+    "avgPrFirstReviewHours": 10,
+    "prMergeRate": 0.65,
+    "daysSinceLastRelease": 22,
+    "releasesInWindow": 5,
+    "prBacklogTrendPct": 5,
+    "issueBacklogTrendPct": 3
+  },
+  "community": {
+    "activeContributors": 1,
+    "contributorGrowthPct": 0,
+    "contributorDiversityIndex": 0.0,
+    "newContributors": 0,
+    "totalHumanCommits": 95
+  },
+  "security": {
+    "knownVulnerabilities": 0,
+    "maxCvssScore": 0,
+    "daysSinceSecurityRelease": 22,
+    "totalDependencies": 20,
+    "outdatedDependencies": 4
+  },
+  "releases": {
+    "avgDaysBetweenReleases": 18,
+    "releaseIntervalStdDev": 6,
+    "majorVersionBumps": 1,
+    "totalReleases": 5,
+    "projectAgeDays": 800
+  }
+}

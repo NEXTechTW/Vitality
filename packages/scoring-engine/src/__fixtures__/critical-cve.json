@@ -1,0 +1,36 @@
+{
+  "_description": "A project with a critical unpatched CVE in a direct dependency.",
+  "project": "vulnerable/project",
+  "windowDays": 90,
+  "maintenance": {
+    "avgIssueFirstResponseHours": 36,
+    "issueResolutionRate": 0.60,
+    "avgPrFirstReviewHours": 48,
+    "prMergeRate": 0.55,
+    "daysSinceLastRelease": 65,
+    "releasesInWindow": 2,
+    "prBacklogTrendPct": 8,
+    "issueBacklogTrendPct": 12
+  },
+  "community": {
+    "activeContributors": 8,
+    "contributorGrowthPct": 5,
+    "contributorDiversityIndex": 0.55,
+    "newContributors": 2,
+    "totalHumanCommits": 88
+  },
+  "security": {
+    "knownVulnerabilities": 1,
+    "maxCvssScore": 9.1,
+    "daysSinceSecurityRelease": 999,
+    "totalDependencies": 60,
+    "outdatedDependencies": 12
+  },
+  "releases": {
+    "avgDaysBetweenReleases": 45,
+    "releaseIntervalStdDev": 14,
+    "majorVersionBumps": 0,
+    "totalReleases": 2,
+    "projectAgeDays": 950
+  }
+}

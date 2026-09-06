@@ -1,0 +1,36 @@
+{
+  "_description": "An abandoned project — no recent activity, no releases, stale issues, known CVE.",
+  "project": "abandoned/project",
+  "windowDays": 90,
+  "maintenance": {
+    "avgIssueFirstResponseHours": 720,
+    "issueResolutionRate": 0.04,
+    "avgPrFirstReviewHours": 1440,
+    "prMergeRate": 0.02,
+    "daysSinceLastRelease": 540,
+    "releasesInWindow": 0,
+    "prBacklogTrendPct": 45,
+    "issueBacklogTrendPct": 38
+  },
+  "community": {
+    "activeContributors": 0,
+    "contributorGrowthPct": -60,
+    "contributorDiversityIndex": 0.0,
+    "newContributors": 0,
+    "totalHumanCommits": 1
+  },
+  "security": {
+    "knownVulnerabilities": 3,
+    "maxCvssScore": 9.8,
+    "daysSinceSecurityRelease": 999,
+    "totalDependencies": 80,
+    "outdatedDependencies": 35
+  },
+  "releases": {
+    "avgDaysBetweenReleases": 400,
+    "releaseIntervalStdDev": 180,
+    "majorVersionBumps": 0,
+    "totalReleases": 0,
+    "projectAgeDays": 2100
+  }
+}

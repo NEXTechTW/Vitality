@@ -1,0 +1,36 @@
+{
+  "_description": "A thriving, actively maintained open source project with a diverse contributor base.",
+  "project": "thriving/project",
+  "windowDays": 90,
+  "maintenance": {
+    "avgIssueFirstResponseHours": 12,
+    "issueResolutionRate": 0.88,
+    "avgPrFirstReviewHours": 18,
+    "prMergeRate": 0.82,
+    "daysSinceLastRelease": 14,
+    "releasesInWindow": 8,
+    "prBacklogTrendPct": -2,
+    "issueBacklogTrendPct": 1
+  },
+  "community": {
+    "activeContributors": 42,
+    "contributorGrowthPct": 25,
+    "contributorDiversityIndex": 0.78,
+    "newContributors": 7,
+    "totalHumanCommits": 312
+  },
+  "security": {
+    "knownVulnerabilities": 0,
+    "maxCvssScore": 0,
+    "daysSinceSecurityRelease": 18,
+    "totalDependencies": 45,
+    "outdatedDependencies": 2
+  },
+  "releases": {
+    "avgDaysBetweenReleases": 12,
+    "releaseIntervalStdDev": 4,
+    "majorVersionBumps": 0,
+    "totalReleases": 8,
+    "projectAgeDays": 1200
+  }
+}

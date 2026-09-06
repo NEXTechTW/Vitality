@@ -1,0 +1,29 @@
+{
+  "name": "@vitality/scoring-engine",
+  "version": "0.1.0",
+  "description": "Deterministic open source health scoring engine. Zero network/file-IO imports allowed.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "check:boundaries": "depcruise src --config .dependency-cruiser.cjs"
+  },
+  "devDependencies": {
+    "typescript": "*",
+    "vitest": "*",
+    "@vitest/coverage-v8": "*",
+    "@types/node": "*",
+    "dependency-cruiser": "*"
+  }
+}
