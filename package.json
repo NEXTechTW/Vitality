@@ -1,6 +1,7 @@
 {
   "name": "vitality",
   "private": true,
+  "type": "module",
   "version": "0.0.1",
   "description": "An open standard and toolkit for measuring open source project health",
   "packageManager": "pnpm@12.3.4",
@@ -8,7 +9,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build && node scripts/sync-docs.js",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
