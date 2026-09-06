@@ -581,3 +581,46 @@
 .modalSaveBtn:hover {
   background: var(--accent-hover);
 }
+
+.statusBanner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.statusSuccess {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+}
+
+.statusError {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.statusInfo {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
+}
+
+.tokenHelp {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+}
+
+.tokenHelp a {
+  color: var(--accent-light);
+  text-decoration: underline;
+}
+
+.tokenHelp a:hover {
+  color: #ffffff;
+}
