@@ -1,0 +1,1 @@
+{"version":3,"file":"releases.d.ts","sourceRoot":"","sources":["../../src/github/releases.ts"],"names":[],"mappings":"AAAA;;GAEG;AACH,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,aAAa,CAAC;AAChD,OAAO,KAAK,EAAE,UAAU,EAAE,MAAM,aAAa,CAAC;AAuB9C,wBAAsB,eAAe,CACnC,MAAM,EAAE,YAAY,EACpB,KAAK,EAAE,MAAM,EACb,IAAI,EAAE,MAAM,EACZ,OAAO,EAAE,MAAM,GACd,OAAO,CAAC,UAAU,EAAE,CAAC,CA0BvB"}

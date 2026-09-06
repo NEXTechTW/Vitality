@@ -1,0 +1,1 @@
+{"version":3,"file":"issues.d.ts","sourceRoot":"","sources":["../../src/github/issues.ts"],"names":[],"mappings":"AAAA;;GAEG;AACH,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,aAAa,CAAC;AAChD,OAAO,KAAK,EAAE,QAAQ,EAAE,MAAM,aAAa,CAAC;AAuC5C,wBAAsB,aAAa,CACjC,MAAM,EAAE,YAAY,EACpB,KAAK,EAAE,MAAM,EACb,IAAI,EAAE,MAAM,EACZ,OAAO,EAAE,MAAM,GACd,OAAO,CAAC,QAAQ,EAAE,CAAC,CAiCrB"}

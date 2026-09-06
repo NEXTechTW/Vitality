@@ -1,0 +1,1 @@
+{"version":3,"file":"pull-requests.d.ts","sourceRoot":"","sources":["../../src/github/pull-requests.ts"],"names":[],"mappings":"AAAA;;GAEG;AACH,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,aAAa,CAAC;AAChD,OAAO,KAAK,EAAE,cAAc,EAAE,MAAM,aAAa,CAAC;AAuClD,wBAAsB,mBAAmB,CACvC,MAAM,EAAE,YAAY,EACpB,KAAK,EAAE,MAAM,EACb,IAAI,EAAE,MAAM,EACZ,OAAO,EAAE,MAAM,GACd,OAAO,CAAC,cAAc,EAAE,CAAC,CA8B3B"}

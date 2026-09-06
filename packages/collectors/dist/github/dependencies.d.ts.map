@@ -1,0 +1,1 @@
+{"version":3,"file":"dependencies.d.ts","sourceRoot":"","sources":["../../src/github/dependencies.ts"],"names":[],"mappings":"AAAA;;;GAGG;AACH,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,aAAa,CAAC;AAChD,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,aAAa,CAAC;AAoEjD,wBAAsB,mBAAmB,CACvC,MAAM,EAAE,YAAY,EACpB,KAAK,EAAE,MAAM,EACb,IAAI,EAAE,MAAM,EACZ,MAAM,EAAE,MAAM,GACb,OAAO,CAAC,aAAa,EAAE,CAAC,CAQ1B"}
