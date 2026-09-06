@@ -1,0 +1,106 @@
+{
+  "protocol_version": "1.0",
+  "project": "NEXTechTW/Vitality",
+  "generated_at": "2026-09-06T13:30:36.807Z",
+  "score": 52,
+  "maintenance": {
+    "score": 50,
+    "issue_response": 0,
+    "pull_request_response": 0,
+    "backlog_trend": "+0% (90d)",
+    "breakdown": [
+      {
+        "label": "Issue first-response speed",
+        "delta": 25
+      },
+      {
+        "label": "PR first-review speed",
+        "delta": 25
+      },
+      {
+        "label": "PR merge rate",
+        "delta": 0
+      },
+      {
+        "label": "Issue resolution rate",
+        "delta": 0
+      },
+      {
+        "label": "Release recency",
+        "delta": 0
+      }
+    ]
+  },
+  "community": {
+    "score": 15,
+    "active_contributors": 1,
+    "contributor_growth": 0,
+    "contributor_diversity_index": 0,
+    "breakdown": [
+      {
+        "label": "Active contributors in window",
+        "delta": 4
+      },
+      {
+        "label": "Contributor diversity index",
+        "delta": 0
+      },
+      {
+        "label": "Contributor count growth",
+        "delta": 6
+      },
+      {
+        "label": "New contributors this window",
+        "delta": 5
+      }
+    ]
+  },
+  "security": {
+    "score": 100,
+    "known_vulnerabilities": 0,
+    "dependency_risk": "none",
+    "breakdown": [
+      {
+        "label": "No known vulnerabilities",
+        "delta": 0
+      }
+    ]
+  },
+  "releases": {
+    "score": 40,
+    "frequency": "frequent",
+    "stability": "high",
+    "breaking_change_rate": "none",
+    "breakdown": [
+      {
+        "label": "No releases in analysis window",
+        "delta": 0
+      },
+      {
+        "label": "Release cadence",
+        "delta": 0
+      },
+      {
+        "label": "Release cadence stability",
+        "delta": 15
+      },
+      {
+        "label": "Breaking change rate (major version bumps)",
+        "delta": 15
+      },
+      {
+        "label": "Early-stage project (no cadence history yet)",
+        "delta": 10
+      }
+    ]
+  },
+  "provenance": {
+    "data_sources": [
+      "github_api",
+      "osv_database"
+    ],
+    "computation_hash": "sha256:5e0d3665ef110272790b143947355847cff7dcbb9b310b90828741556d6c5bb0",
+    "reproducible": true,
+    "algorithm_version": "1.0.0"
+  }
+}
