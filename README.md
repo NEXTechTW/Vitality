@@ -6,13 +6,22 @@
 
 An open standard and toolkit for measuring open source project health — maintenance activity, community strength, security posture, and release stability — in a way that's transparent, deterministic, and reproducible.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Dashboard-nextechtw.github.io%2FVitality-6366f1?style=for-the-badge&logo=github)](https://nextechtw.github.io/Vitality/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Protocol Version](https://img.shields.io/badge/protocol-v1.0-informational)](schemas/vitality.schema.json)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen)](#)
+[![Build & Deploy](https://github.com/nextechtw/Vitality/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/nextechtw/Vitality/actions)
 
-[Why Vitality](#why-vitality) · [How It Works](#how-it-works) · [Monorepo Architecture](#monorepo-architecture) · [CLI Usage](#cli-usage) · [Scoring Engine](#scoring-engine) · [Web Dashboard](#web-dashboard)
+[Live Dashboard](https://nextechtw.github.io/Vitality/) · [Why Vitality](#why-vitality) · [How It Works](#how-it-works) · [Monorepo Architecture](#monorepo-architecture) · [CLI Usage](#cli-usage) · [README Badges](#readme-badges) · [CI/CD Gate](#cicd-quality-gate)
 
 </div>
+
+---
+
+## 🌐 Live Web Dashboard
+
+Explore repositories, inspect dimension breakdowns, track 90-day health trajectories, and browse ecosystem rankings live:
+
+👉 **[https://nextechtw.github.io/Vitality/](https://nextechtw.github.io/Vitality/)**
 
 ---
 
@@ -47,7 +56,7 @@ Releases:    [█████████████████░░░]  87/
 - **Fully explainable:** Every score provides an exact mathematical delta breakdown of factors that contributed points.
 - **Reproducible:** Every report includes a SHA-256 computation hash. Anyone can re-run the engine on the same input data to verify the hash.
 - **Zero-Trust Boundaries:** Enforced via `dependency-cruiser` in CI — the scoring engine is strictly forbidden from importing network clients, filesystem modules, or LLM SDKs.
-- **100% Open Source:** Built with Apache 2.0.
+- **100% Open Source:** Licensed under Apache 2.0.
 
 ---
 
@@ -62,12 +71,12 @@ GitHub GraphQL API / OSV Database
                                           ┌───────────────────┼───────────────────┐
                                           ▼                   ▼                   ▼
                                          CLI                 API              Dashboard
-                                          │                   │               (React 19)
+                                          │                   │               (Live SPA)
                                           ▼                   ▼
                                     GitHub Actions       SVG Badges
 ```
 
-The scoring engine is a pure function: it accepts normalized repository data and returns scores and breakdown items — zero side effects. Everything else in the system (CLI, API, Dashboard, CI Actions) consumes that deterministic core.
+The scoring engine is a pure function: it accepts normalized repository data and returns scores and breakdown items with zero side effects. Everything else in the system (CLI, API, Dashboard, CI Actions) consumes that deterministic core.
 
 ---
 
@@ -95,8 +104,8 @@ Vitality is organized as a pnpm monorepo managed with Turborepo:
 ### Installation & Build
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/vitality.git
-cd vitality
+git clone https://github.com/nextechtw/Vitality.git
+cd Vitality
 
 # Install dependencies
 pnpm install
@@ -104,7 +113,7 @@ pnpm install
 # Build all monorepo packages
 pnpm build
 
-# Run all test suites
+# Run all test suites (23 passing tests)
 pnpm test
 
 # Check architectural boundary rules
@@ -118,34 +127,68 @@ pnpm check:boundaries
 Run analysis directly from your terminal:
 
 ```bash
-# Analyze a repository
+# Analyze a repository using pnpm
 pnpm --filter @vitality/cli dev analyze facebook/react
 
-# Or using the built binary
+# Or run the built CLI binary
 node packages/cli/dist/bin.js analyze vercel/next.js
 ```
 
-Options:
+### CLI Command Options
 ```
+Usage: vitality analyze [options] <owner/repo>
+
 Options:
   -t, --token <token>    GitHub Personal Access Token (or GITHUB_TOKEN env)
   -o, --output <path>    Output file path (default: "vitality.json")
   --min-score <score>    Exit with code 1 if score is below this threshold (CI gate)
-  -h, --help             Display help
+  -h, --help             Display help for command
 ```
 
 ---
 
-## Web Dashboard
+## README Badges
 
-The web dashboard provides an interactive overview of repository telemetry:
+Add a live health badge to your repository `README.md`:
 
-```bash
-# Start the dashboard in development mode
-pnpm --filter @vitality/dashboard dev
+```markdown
+[![Vitality Health](https://img.shields.io/badge/Vitality%20Health-92%2F100-22c55e?style=flat-square&logo=github)](https://nextechtw.github.io/Vitality/#/projects/facebook/react)
 ```
 
-Visit `http://localhost:5173` to explore projects, inspect dimension breakdowns, view historical score trajectories, and copy live README SVG badges.
+Clicking the badge takes visitors directly to your project's audit page on the live dashboard:
+👉 `https://nextechtw.github.io/Vitality/#/projects/<owner>/<repo>`
+
+---
+
+## CI/CD Quality Gate
+
+Add automated supply-chain policy checks to your GitHub Actions pipeline:
+
+```yaml
+# .github/workflows/vitality-check.yml
+name: Dependency Health Check
+on: [pull_request]
+
+jobs:
+  health-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm --filter @vitality/cli build
+      - name: Enforce minimum health score
+        run: |
+          node packages/cli/dist/bin.js analyze <owner/repo> --min-score 75
+```
+
+If a project's health falls below **75** (due to unpatched critical CVEs, abandoned releases, or severe contributor burnout), the workflow fails automatically.
 
 ---
 
