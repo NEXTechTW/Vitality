@@ -10,6 +10,7 @@ An open standard and toolkit for measuring open source project health — mainte
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Protocol Version](https://img.shields.io/badge/protocol-v1.0-informational)](schemas/vitality.schema.json)
 [![Build & Deploy](https://github.com/nextechtw/Vitality/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/nextechtw/Vitality/actions)
+[![Vitality Health Score](https://vitality.dev/v1/badge/NEXTechTW/Vitality.svg)](https://vitality.dev/projects/NEXTechTW/Vitality)
 
 [Live Dashboard](https://nextechtw.github.io/Vitality/) · [Why Vitality](#why-vitality) · [How It Works](#how-it-works) · [Monorepo Architecture](#monorepo-architecture) · [CLI Usage](#cli-usage) · [README Badges](#readme-badges) · [CI/CD Gate](#cicd-quality-gate)
 
