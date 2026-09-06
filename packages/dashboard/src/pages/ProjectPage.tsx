@@ -71,9 +71,9 @@ export function ProjectPage() {
 
   const score = report?.score ?? 85;
   const badgeColor = score >= 90 ? '22c55e' : score >= 80 ? '84cc16' : score >= 70 ? 'eab308' : score >= 50 ? 'f97316' : 'ef4444';
-  const badgeUrl = `https://img.shields.io/badge/Vitality-${score}%2F100-${badgeColor}?logo=github&style=flat-square`;
+  const badgeUrl = `https://img.shields.io/badge/Vitality_Health-${score}%2F100-${badgeColor}?logo=github&style=flat-square`;
   const projectUrl = `https://nextechtw.github.io/Vitality/#/projects/${owner}/${repo}`;
-  const badgeMd = `[![Vitality Health Score: ${score}/100](${badgeUrl})](${projectUrl})`;
+  const badgeMd = `[![Vitality Health Score](${badgeUrl})](${projectUrl})`;
 
   const copyBadgeMarkdown = () => {
     navigator.clipboard?.writeText(badgeMd);
