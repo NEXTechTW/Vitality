@@ -1,7 +1,7 @@
 {
   "protocol_version": "1.0",
   "project": "NEXTechTW/Vitality",
-  "generated_at": "2026-09-06T13:30:36.807Z",
+  "generated_at": "2026-09-06T13:33:39.315Z",
   "score": 52,
   "maintenance": {
     "score": 50,
@@ -99,7 +99,7 @@
       "github_api",
       "osv_database"
     ],
-    "computation_hash": "sha256:5e0d3665ef110272790b143947355847cff7dcbb9b310b90828741556d6c5bb0",
+    "computation_hash": "sha256:f158ddaa0c2d42d280f99018025b0146641217c5930baf4a93bc0288e702ae09",
     "reproducible": true,
     "algorithm_version": "1.0.0"
   }
