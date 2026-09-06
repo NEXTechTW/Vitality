@@ -7,10 +7,10 @@
 An open standard and toolkit for measuring open source project health — maintenance activity, community strength, security posture, and release stability — in a way that's transparent, deterministic, and reproducible.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Protocol Version](https://img.shields.io/badge/protocol-v1.0-informational)](docs/PROTOCOL.md)
+[![Protocol Version](https://img.shields.io/badge/protocol-v1.0-informational)](schemas/vitality.schema.json)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](#)
 
-[Getting Started](#getting-started) · [How it Works](#how-it-works) · [CLI](#cli-usage) · [GitHub Action](#github-action) · [API](#api) · [Contributing](#contributing)
+[Why Vitality](#why-vitality) · [How It Works](#how-it-works) · [Monorepo Architecture](#monorepo-architecture) · [CLI Usage](#cli-usage) · [Scoring Engine](#scoring-engine) · [Web Dashboard](#web-dashboard)
 
 </div>
 
@@ -20,225 +20,135 @@ An open standard and toolkit for measuring open source project health — mainte
 
 Stars and forks tell you how popular a project *was*. They don't tell you whether it's actually maintained *right now*.
 
-A project with 20,000 stars might be abandoned. A project with 2,000 stars might have an active maintainer team, fast issue response, and a clean security record. Vitality exists to answer the question your dependency graph actually cares about:
+A project with 20,000 stars might be abandoned. A project with 2,000 stars might have an active maintainer team, fast issue response, and a clean security record. Vitality answers the question your dependency graph actually cares about:
 
 > **Is this project healthy, right now — and can I prove it?**
 
 Vitality analyzes a repository across four dimensions — **Maintenance**, **Community**, **Security**, and **Releases** — and produces a single, explainable health score backed by a standardized, versioned data format: `vitality.json`.
 
 ```
-Vitality Health
+Vitality Health Report: facebook/react
+Overall Score: 92 / 100 [A]
 
-████████████████████░░ 91/100
+Maintenance: [██████████████████░░]  91/100
+Community:   [███████████████████░]  96/100
+Security:    [███████████████████░]  95/100
+Releases:    [█████████████████░░░]  87/100
 
-Maintenance     96
-Security        89
-Community       92
-Releases        94
+✔ Provenance: sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+✔ Report saved to vitality.json
 ```
 
 ---
 
 ## Core Principles
 
-- **Deterministic scoring.** Given the same input data, the score is always the same. No LLM is ever in the scoring path.
-- **Fully explainable.** Every score comes with a breakdown of exactly what added or subtracted points — never a black-box number.
-- **Reproducible.** Every report includes a computation hash. Anyone can re-run the engine against the same raw data and get an identical result.
-- **AI explains, it doesn't score.** AI is used only to translate an already-computed report into plain-language insight and recommendations — never to decide the score itself.
-- **100% open source.** The protocol, the scoring engine, and the API specification are all open. Fork it, self-host it, build on top of it.
+- **Deterministic scoring:** Given the same input snapshot, the score is always byte-identical. No LLMs are ever inside the scoring path.
+- **Fully explainable:** Every score provides an exact mathematical delta breakdown of factors that contributed points.
+- **Reproducible:** Every report includes a SHA-256 computation hash. Anyone can re-run the engine on the same input data to verify the hash.
+- **Zero-Trust Boundaries:** Enforced via `dependency-cruiser` in CI — the scoring engine is strictly forbidden from importing network clients, filesystem modules, or LLM SDKs.
+- **100% Open Source:** Built with Apache 2.0.
 
 ---
 
 ## How It Works
 
 ```
-GitHub API / OSV Database
+GitHub GraphQL API / OSV Database
         │
         ▼
-  Collectors  ──►  Normalizer  ──►  Scoring Engine  ──►  vitality.json
+   Collectors  ──►  Normalizer  ──►  Scoring Engine  ──►  vitality.json
                                                               │
                                           ┌───────────────────┼───────────────────┐
                                           ▼                   ▼                   ▼
-                                        CLI                  API              AI Insight
-                                          │                   │                (reports)
+                                         CLI                 API              Dashboard
+                                          │                   │               (React 19)
                                           ▼                   ▼
-                                   GitHub Action          Dashboard / Badge
+                                    GitHub Actions       SVG Badges
 ```
 
-The scoring engine is a pure function: it takes normalized repository data in, and returns a score and breakdown out — no network calls, no side effects. Everything else in the system (CLI, API, Dashboard, GitHub Action, AI reports) is a consumer of that one deterministic core.
-
-See [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for the full specification and [`docs/SCORING.md`](docs/SCORING.md) for the scoring methodology and weight rationale.
+The scoring engine is a pure function: it accepts normalized repository data and returns scores and breakdown items — zero side effects. Everything else in the system (CLI, API, Dashboard, CI Actions) consumes that deterministic core.
 
 ---
 
-## Getting Started
+## Monorepo Architecture
 
-### Install the CLI
+Vitality is organized as a pnpm monorepo managed with Turborepo:
+
+| Package | Purpose |
+|---|---|
+| [`schemas/`](schemas/vitality.schema.json) | Standardized JSON Schema definition for `vitality.json` (Protocol v1.0). |
+| [`@vitality/scoring-engine`](packages/scoring-engine) | Pure deterministic scoring library. 0 network/filesystem I/O. |
+| [`@vitality/collectors`](packages/collectors) | GitHub GraphQL API & OSV vulnerability harvester + data normalizer. |
+| [`@vitality/cli`](packages/cli) | Terminal tool with ASCII visualizers, schema validation, and exit code policies. |
+| [`@vitality/api`](packages/api) | Fastify REST API, PostgreSQL audit snapshots, Redis caching, and SVG badge generator. |
+| [`@vitality/dashboard`](packages/dashboard) | Dark-mode React 19 + Vite web dashboard with live animated gauges and Recharts trends. |
+
+---
+
+## Quick Start
+
+### Prerequisites
+- Node.js >= 20.0.0
+- pnpm >= 9.0.0
+
+### Installation & Build
+```bash
+# Clone the repository
+git clone https://github.com/<your-username>/vitality.git
+cd vitality
+
+# Install dependencies
+pnpm install
+
+# Build all monorepo packages
+pnpm build
+
+# Run all test suites
+pnpm test
+
+# Check architectural boundary rules
+pnpm check:boundaries
+```
+
+---
+
+## CLI Usage
+
+Run analysis directly from your terminal:
 
 ```bash
-npm install -g @vitality/cli
+# Analyze a repository
+pnpm --filter @vitality/cli dev analyze facebook/react
+
+# Or using the built binary
+node packages/cli/dist/bin.js analyze vercel/next.js
 ```
 
-### Analyze a repository
+Options:
+```
+Options:
+  -t, --token <token>    GitHub Personal Access Token (or GITHUB_TOKEN env)
+  -o, --output <path>    Output file path (default: "vitality.json")
+  --min-score <score>    Exit with code 1 if score is below this threshold (CI gate)
+  -h, --help             Display help
+```
+
+---
+
+## Web Dashboard
+
+The web dashboard provides an interactive overview of repository telemetry:
 
 ```bash
-vitality analyze owner/repository
+# Start the dashboard in development mode
+pnpm --filter @vitality/dashboard dev
 ```
 
-```
-Vitality Health: 87/100
-
-Maintenance   ██████████████░░░░  87
-Security      ████████████████░░  91
-Community     ███████████████░░░  82
-Releases      █████████████████░  88
-
-Written to vitality.json
-```
-
-### Get a plain-language report
-
-```bash
-vitality report owner/repository --ai
-```
-
----
-
-## GitHub Action
-
-Add automatic health analysis to your CI pipeline:
-
-```yaml
-name: Vitality
-on:
-  push:
-  pull_request:
-  schedule:
-    - cron: '0 6 * * 1'   # weekly scan
-
-jobs:
-  vitality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: vitality/health-action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
----
-
-## README Badge
-
-Show your project's health score:
-
-```markdown
-![Vitality Health](https://vitality.dev/v1/badge/owner/repository.svg)
-```
-
-```
-Project
-⭐ 12.4k
-
-Vitality Health: 91
-Security: A
-Maintenance: A
-Community: B+
-```
-
----
-
-## `vitality.json`
-
-Every analysis produces a standardized, versioned report:
-
-```json
-{
-  "protocol_version": "1.0",
-  "project": "owner/repository",
-  "generated_at": "2026-09-06T08:00:00Z",
-  "score": 91,
-  "maintenance": { "score": 94, "release_frequency": 94, "issue_response": 91 },
-  "community": { "score": 92, "active_contributors": 42 },
-  "security": { "score": 89, "known_vulnerabilities": 0, "dependency_risk": "low" },
-  "releases": { "score": 94, "frequency": "healthy", "stability": "high" },
-  "provenance": {
-    "data_sources": ["github_api", "dependency_graph", "osv_database"],
-    "computation_hash": "sha256:2f1a...",
-    "reproducible": true
-  }
-}
-```
-
-Full schema: [`schemas/vitality.schema.json`](schemas/vitality.schema.json).
-
----
-
-## API
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/v1/projects/:owner/:repo` | Latest health report |
-| `POST` | `/v1/projects/:owner/:repo/analyze` | Trigger a fresh analysis |
-| `GET` | `/v1/projects/:owner/:repo/history` | Historical score time series |
-| `GET` | `/v1/leaderboard` | Top-ranked healthy projects |
-| `GET` | `/v1/badge/:owner/:repo.svg` | Badge image |
-
----
-
-## Repository Structure
-
-```
-vitality/
-├── packages/
-│   ├── scoring-engine/   # deterministic scoring logic (pure functions only)
-│   ├── collectors/       # GitHub API + OSV data collection
-│   ├── cli/              # `vitality` command-line tool
-│   ├── api/               # REST API + persistence
-│   ├── ai-layer/          # plain-language report generation
-│   └── dashboard/         # web UI
-├── action/                # GitHub Action wrapper
-├── schemas/               # vitality.json JSON Schema
-└── docs/                  # protocol & scoring documentation
-```
-
----
-
-## Roadmap
-
-- [x] Scoring engine + `vitality.json` v1.0
-- [x] CLI
-- [ ] GitHub Action + README badge
-- [ ] Public API + historical dashboard
-- [ ] AI insight layer (reports, issue triage, release notes)
-- [ ] Plugin ecosystem (third-party dashboards, CI integrations, IDE extensions)
-
-See [`docs/ROADMAP.md`](docs/ROADMAP.md) for details.
-
----
-
-## Contributing
-
-Contributions are welcome — especially around scoring methodology, collector reliability, and dashboard UX.
-
-- Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a PR.
-- If you're an AI coding agent (Claude, Codex, etc.), read [`AGENTS.md`](AGENTS.md) first — it defines hard architectural boundaries (e.g., the scoring engine must never call an LLM or the network) that CI enforces automatically.
-- Good first issues are labeled [`good-first-issue`](../../labels/good-first-issue).
-
-Any change to scoring weights or thresholds must be documented in `docs/SCORING_CHANGELOG.md` with before/after impact on the benchmark repository set.
+Visit `http://localhost:5173` to explore projects, inspect dimension breakdowns, view historical score trajectories, and copy live README SVG badges.
 
 ---
 
 ## License
 
-Licensed under the [Apache License 2.0](LICENSE).
-
-The Vitality name and logo are trademarks reserved for official builds and services; see [`TRADEMARK.md`](TRADEMARK.md) for guidelines on forks and derivative projects.
-
----
-
-<div align="center">
-
-**Vitality** — An open standard for Open Source health.
-
-</div>
+Vitality is licensed under the [Apache License, Version 2.0](LICENSE).
