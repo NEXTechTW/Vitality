@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { verifyGitHubToken, sanitizeToken, getStoredGitHubToken } from '../api.js';
 import styles from './Layout.module.css';
 
 export function Layout() {
@@ -8,37 +9,64 @@ export function Layout() {
   const [search, setSearch] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
-  const [tokenInput, setTokenInput] = useState(() => {
-    try { return localStorage.getItem('vitality_github_token') || ''; } catch { return ''; }
-  });
-  const [hasToken, setHasToken] = useState(() => {
-    try { return !!localStorage.getItem('vitality_github_token'); } catch { return false; }
-  });
+  const [tokenInput, setTokenInput] = useState(() => getStoredGitHubToken() || '');
+  const [hasToken, setHasToken] = useState(() => !!getStoredGitHubToken());
+  const [verifying, setVerifying] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const saveToken = () => {
+  const handleVerifyAndSave = async () => {
+    const clean = sanitizeToken(tokenInput);
+    if (!clean) {
+      clearToken();
+      return;
+    }
+
+    setVerifying(true);
+    setVerifyStatus(null);
     try {
-      if (tokenInput.trim()) {
-        localStorage.setItem('vitality_github_token', tokenInput.trim());
+      const result = await verifyGitHubToken(clean);
+      if (result.valid) {
+        localStorage.setItem('vitality_github_token', clean);
         setHasToken(true);
+        setVerifyStatus({
+          type: 'success',
+          message: `Connected as @${result.username || 'user'}! Limit: ${result.limit.toLocaleString()} req/hr (${result.remaining.toLocaleString()} remaining). Reloading...`,
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
       } else {
-        localStorage.removeItem('vitality_github_token');
-        setHasToken(false);
+        setVerifyStatus({
+          type: 'error',
+          message: result.error || 'Invalid token. Please check and try again.',
+        });
       }
-    } catch { /* ignore */ }
-    setShowTokenModal(false);
-    // Reload to refresh with new token limits
-    window.location.reload();
+    } catch (e: unknown) {
+      setVerifyStatus({
+        type: 'error',
+        message: e instanceof Error ? e.message : 'Network error verifying token',
+      });
+    } finally {
+      setVerifying(false);
+    }
   };
 
   const clearToken = () => {
     try {
       localStorage.removeItem('vitality_github_token');
+      localStorage.removeItem('github_token');
       setTokenInput('');
       setHasToken(false);
+      setVerifyStatus({ type: 'info', message: 'Token removed. Reloading...' });
     } catch { /* ignore */ }
-    setShowTokenModal(false);
-    window.location.reload();
+    setTimeout(() => {
+      setShowTokenModal(false);
+      window.location.reload();
+    }, 800);
   };
 
   useEffect(() => {
@@ -134,6 +162,7 @@ export function Layout() {
             </Link>
 
             <button
+              id="nav-token-btn"
               type="button"
               className={`${styles.tokenBtn} ${hasToken ? styles.tokenBtnActive : ''}`}
               onClick={() => setShowTokenModal(true)}
@@ -174,35 +203,64 @@ export function Layout() {
               </button>
             </div>
             <p className={styles.modalDesc}>
-              Vitality fetches real telemetry directly from GitHub’s REST API. Without a token, GitHub limits unauthenticated browser queries to <strong>60 requests/hour</strong>.
+              Vitality fetches real telemetry directly from GitHub’s REST API. Without a token, GitHub limits unauthenticated queries to <strong>60 requests/hour per IP</strong>.
             </p>
             <p className={styles.modalDesc}>
-              Adding a standard Personal Access Token (classic or fine-grained with 0 special permissions, public read-only) unlocks <strong>5,000 requests/hour</strong>. Your token is stored in your browser’s local storage only.
+              Adding a standard GitHub Personal Access Token (PAT) unlocks <strong>5,000 requests/hour</strong>. No special permissions or scopes are required for public open source repositories.
             </p>
-            <div className={styles.modalInputGroup}>
-              <label htmlFor="gh-token-input" className={styles.modalLabel}>GitHub Personal Access Token:</label>
-              <input
-                id="gh-token-input"
-                type="password"
-                className={styles.modalInput}
-                placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-              />
-            </div>
-            <div className={styles.modalActions}>
-              {hasToken && (
-                <button type="button" className={styles.modalClearBtn} onClick={clearToken}>
-                  Clear Token
+
+            {verifyStatus && (
+              <div className={`${styles.statusBanner} ${verifyStatus.type === 'success' ? styles.statusSuccess : verifyStatus.type === 'error' ? styles.statusError : styles.statusInfo}`}>
+                {verifyStatus.message}
+              </div>
+            )}
+
+            <form onSubmit={(e) => { e.preventDefault(); handleVerifyAndSave(); }}>
+              <div className={styles.modalInputGroup}>
+                <label htmlFor="gh-token-input" className={styles.modalLabel}>
+                  GitHub Personal Access Token:
+                </label>
+                <input
+                  id="gh-token-input"
+                  type="password"
+                  className={styles.modalInput}
+                  placeholder="ghp_... or github_pat_..."
+                  value={tokenInput}
+                  onChange={(e) => {
+                    setTokenInput(e.target.value);
+                    setVerifyStatus(null);
+                  }}
+                  autoFocus
+                />
+                <span className={styles.tokenHelp}>
+                  Don't have one?{' '}
+                  <a
+                    href="https://github.com/settings/tokens/new?description=Vitality+Dashboard&scopes="
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Generate free read-only token on GitHub ↗
+                  </a>
+                </span>
+              </div>
+              <div className={styles.modalActions}>
+                {hasToken && (
+                  <button type="button" className={styles.modalClearBtn} onClick={clearToken}>
+                    Clear Token
+                  </button>
+                )}
+                <button type="button" className={styles.modalCancelBtn} onClick={() => setShowTokenModal(false)}>
+                  Cancel
                 </button>
-              )}
-              <button type="button" className={styles.modalCancelBtn} onClick={() => setShowTokenModal(false)}>
-                Cancel
-              </button>
-              <button type="button" className={styles.modalSaveBtn} onClick={saveToken}>
-                Save &amp; Reload
-              </button>
-            </div>
+                <button
+                  type="submit"
+                  className={styles.modalSaveBtn}
+                  disabled={verifying}
+                >
+                  {verifying ? 'Verifying with GitHub...' : 'Verify & Save'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
