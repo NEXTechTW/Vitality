@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -41,8 +41,10 @@ jobs:
       - name: Build monorepo & dashboard
         run: pnpm build
 
-      - name: Ensure 404.html fallback for SPA
-        run: cp packages/dashboard/dist/index.html packages/dashboard/dist/404.html
+      - name: Ensure 404.html and .nojekyll for SPA
+        run: |
+          cp packages/dashboard/dist/index.html packages/dashboard/dist/404.html
+          touch packages/dashboard/dist/.nojekyll
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
