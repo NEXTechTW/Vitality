@@ -1,10 +1,16 @@
 .container {
-  max-width: 1100px;
+  max-width: 1240px;
   margin: 0 auto;
   padding: var(--space-8) var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+  animation: fadeIn 350ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .loadingContainer,
@@ -16,15 +22,15 @@
   min-height: 50vh;
   gap: var(--space-4);
   text-align: center;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .spinner {
-  width: 44px;
-  height: 44px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--color-primary-light);
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(99, 102, 241, 0.15);
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -37,52 +43,67 @@
 .backBtn {
   margin-top: var(--space-4);
   padding: var(--space-3) var(--space-6);
-  background: var(--color-primary);
+  background: var(--accent);
   color: white;
   border-radius: var(--radius-lg);
   text-decoration: none;
   font-weight: 600;
+  transition: background var(--transition);
+}
+
+.backBtn:hover {
+  background: var(--accent-hover);
 }
 
 .toast {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: #1e1b4b;
-  border: 1px solid #6366f1;
+  background: rgba(19, 28, 48, 0.95);
+  border: 1px solid rgba(99, 102, 241, 0.5);
   color: #e0e7ff;
   padding: 12px 20px;
   border-radius: var(--radius-lg);
   font-size: 0.875rem;
   font-weight: 500;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
   z-index: 1000;
-  animation: fadeIn 0.2s ease-out;
+  animation: toastIn 0.25s ease-out;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Header Card ── */
 .headerCard {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-top: 1px solid rgba(99, 102, 241, 0.4);
   border-radius: var(--radius-2xl);
   padding: var(--space-8);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.headerCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.6) 50%, transparent 100%);
 }
 
 .headerLeft {
@@ -97,49 +118,54 @@
   align-items: center;
   gap: var(--space-2);
   font-size: 0.8125rem;
-  color: var(--color-text-muted);
+  color: var(--text-muted);
 }
 
 .breadcrumbs a {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   text-decoration: none;
+  transition: color var(--transition);
 }
 
 .breadcrumbs a:hover {
-  color: var(--color-text-primary);
+  color: var(--accent-light);
 }
 
 .activeBreadcrumb {
-  color: var(--color-primary-light);
+  color: var(--accent-light);
   font-weight: 600;
 }
 
 .repoTitle {
+  font-family: var(--font-mono);
   font-size: clamp(1.75rem, 3.5vw, 2.5rem);
   font-weight: 800;
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   margin: 0;
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  font-family: var(--font-mono);
+  flex-wrap: wrap;
+  letter-spacing: -0.02em;
 }
 
 .ghLink {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   text-decoration: none;
-  padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+  font-family: var(--font-sans);
 }
 
 .ghLink:hover {
-  color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .metaRow {
@@ -147,16 +173,44 @@
   align-items: center;
   gap: var(--space-3);
   font-size: 0.8125rem;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   flex-wrap: wrap;
 }
 
 .versionBadge {
   font-family: var(--font-mono);
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(99, 102, 241, 0.12);
   color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.3);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
+}
+
+.dataSourceBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.dsLive {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.dsApi {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.dsCache {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.3);
 }
 
 .actions {
@@ -167,19 +221,24 @@
 }
 
 .actionBtn {
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.55rem 1.15rem;
+  background: var(--accent);
   color: white;
   border: none;
-  border-radius: var(--radius-lg);
-  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  transition: all var(--transition);
 }
 
 .actionBtn:hover:not(:disabled) {
-  background: var(--color-primary-hover);
+  background: var(--accent-hover);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
   transform: translateY(-1px);
 }
 
@@ -189,13 +248,15 @@
 }
 
 .actionBtnSecondary {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  box-shadow: none;
 }
 
 .actionBtnSecondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .headerRight {
@@ -205,13 +266,13 @@
 /* ── Dimensions 4-Grid ── */
 .dimensionsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--space-4);
 }
 
 .dimCard {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: var(--space-5);
   display: flex;
@@ -219,21 +280,28 @@
   gap: var(--space-4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.dimCard:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
 
 .dimSummary {
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: var(--color-text-muted);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  padding-top: var(--space-2);
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: var(--space-3);
 }
 
 /* ── Chart ── */
 .chartCard {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   backdrop-filter: blur(12px);
@@ -241,6 +309,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  box-shadow: var(--shadow);
 }
 
 .chartHeader {
@@ -250,15 +319,16 @@
 }
 
 .chartTitle {
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   margin: 0 0 var(--space-1) 0;
 }
 
 .chartSubtitle {
   font-size: 0.875rem;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -266,6 +336,10 @@
   font-size: 0.75rem;
   color: #818cf8;
   font-family: var(--font-mono);
+  background: rgba(99, 102, 241, 0.1);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 .chartWrapper {
@@ -274,13 +348,14 @@
 
 /* ── Provenance Card ── */
 .provenanceCard {
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 18, 32, 0.8);
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  box-shadow: var(--shadow);
 }
 
 .provHeader {
@@ -291,18 +366,20 @@
 
 .provIcon {
   font-size: 1.5rem;
+  line-height: 1;
 }
 
 .provTitle {
-  font-size: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   margin: 0 0 var(--space-1) 0;
 }
 
 .provSubtitle {
   font-size: 0.8125rem;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.5;
 }
@@ -324,14 +401,15 @@
 }
 
 .provKey {
-  color: var(--color-text-muted);
-  min-width: 180px;
+  color: var(--text-muted);
+  min-width: 190px;
 }
 
 .provHash {
   font-family: var(--font-mono);
   color: #38bdf8;
   background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   word-break: break-all;
@@ -340,22 +418,22 @@
 .copyHashBtn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   border-radius: var(--radius-sm);
   padding: 2px 8px;
   font-size: 0.75rem;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition);
 }
 
 .copyHashBtn:hover {
-  color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .provVal {
   font-family: var(--font-mono);
-  color: var(--color-text-primary);
+  color: var(--text-primary);
 }
 
 .sourceTags {
@@ -365,8 +443,9 @@
 }
 
 .sourceTag {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   padding: 2px 8px;

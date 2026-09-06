@@ -12,32 +12,71 @@
 
 .icon {
   font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .label {
-  flex: 1;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
 }
 
 .score {
+  font-family: var(--font-mono);
   font-size: 0.875rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  min-width: 2rem;
-  text-align: right;
+  letter-spacing: -0.01em;
 }
 
+/* ── Track ── */
 .track {
-  height: 6px;
-  background: var(--bg-elevated);
-  border-radius: 3px;
+  position: relative;
+  height: 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-full);
   overflow: hidden;
 }
 
 .fill {
+  position: absolute;
+  inset: 0;
+  width: var(--target-width);
+  border-radius: var(--radius-full);
+  animation: barGrow 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.2s;
+}
+
+/* Shimmer overlay */
+.shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
   height: 100%;
-  border-radius: 3px;
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerSlide 2s ease-in-out 1.2s infinite;
+  pointer-events: none;
+}
+
+@keyframes barGrow {
+  from {
+    width: 0%;
+    opacity: 0.3;
+  }
+  to {
+    width: var(--target-width);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmerSlide {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

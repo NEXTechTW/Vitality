@@ -16,11 +16,11 @@ function scoreClass(score: number): string {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 90) return 'var(--score-great)';
-  if (score >= 75) return 'var(--score-good)';
-  if (score >= 60) return 'var(--score-ok)';
-  if (score >= 40) return 'var(--score-warn)';
-  return 'var(--score-bad)';
+  if (score >= 90) return '#22c55e';
+  if (score >= 75) return '#84cc16';
+  if (score >= 60) return '#eab308';
+  if (score >= 40) return '#f97316';
+  return '#ef4444';
 }
 
 export function DimensionBar({ label, score, icon }: Props) {
@@ -37,8 +37,14 @@ export function DimensionBar({ label, score, icon }: Props) {
       <div className={styles.track} role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
         <div
           className={styles.fill}
-          style={{ width: `${score}%`, background: color, boxShadow: `0 0 8px ${color}80` }}
+          style={{
+            '--target-width': `${score}%`,
+            background: `linear-gradient(90deg, ${color}cc, ${color})`,
+            boxShadow: `0 0 12px ${color}40`,
+          } as React.CSSProperties}
         />
+        {/* Shimmer overlay */}
+        <div className={styles.shimmer} style={{ width: `${score}%` }} />
       </div>
     </div>
   );

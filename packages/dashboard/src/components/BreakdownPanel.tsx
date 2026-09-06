@@ -28,12 +28,17 @@ export function BreakdownPanel({
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h3 className={styles.title}>Scoring Mechanics & Explainability</h3>
-        <span className={styles.badge}>Deterministic · 0 Hallucinations</span>
+        <div>
+          <h3 className={styles.title}>Scoring Mechanics & Explainability</h3>
+          <p className={styles.subtitle}>
+            Every point added or deducted is backed by verifiable on-chain GitHub and OSV metrics.
+          </p>
+        </div>
+        <span className={styles.badge}>
+          <span className={styles.badgeDot} />
+          Deterministic · 0 Hallucinations
+        </span>
       </div>
-      <p className={styles.subtitle}>
-        Every point added or deducted is backed by verifiable on-chain GitHub and OSV metrics. Click any dimension to inspect the exact formula breakdown.
-      </p>
 
       <div className={styles.accordion}>
         {dimensions.map((dim, idx) => {
@@ -52,11 +57,15 @@ export function BreakdownPanel({
                 </div>
                 <div className={styles.dimRight}>
                   <span className={styles.scoreText}>{dim.score} / 100</span>
-                  <span className={`${styles.chevron} ${isOpen ? styles.rotated : ''}`}>▾</span>
+                  <span className={`${styles.chevron} ${isOpen ? styles.rotated : ''}`}>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
                 </div>
               </button>
 
-              {isOpen && (
+              <div className={`${styles.contentWrapper} ${isOpen ? styles.contentOpen : ''}`}>
                 <div className={styles.content}>
                   {dim.metrics && dim.metrics.length > 0 && (
                     <div className={styles.metricsGrid}>
@@ -73,9 +82,16 @@ export function BreakdownPanel({
                     <div className={styles.listHeader}>Factor Contributions:</div>
                     {dim.breakdown.map((item, i) => {
                       const isPositive = item.delta >= 0;
+                      const absDelta = Math.abs(item.delta);
                       return (
                         <div key={i} className={styles.factorRow}>
-                          <span className={styles.factorLabel}>{item.label}</span>
+                          <div className={styles.factorLeft}>
+                            <div
+                              className={`${styles.factorBar} ${isPositive ? styles.barPositive : styles.barNegative}`}
+                              style={{ width: `${Math.min(absDelta * 2.5, 100)}%` }}
+                            />
+                            <span className={styles.factorLabel}>{item.label}</span>
+                          </div>
                           <span
                             className={`${styles.factorDelta} ${
                               isPositive ? styles.positive : styles.negative
@@ -88,7 +104,7 @@ export function BreakdownPanel({
                     })}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}

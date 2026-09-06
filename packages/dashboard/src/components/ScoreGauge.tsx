@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import styles from './ScoreGauge.module.css';
 
 interface Props {
@@ -14,6 +15,7 @@ function scoreClass(score: number): string {
 }
 
 function grade(score: number): string {
+  if (score >= 95) return 'A+';
   if (score >= 90) return 'A';
   if (score >= 80) return 'B+';
   if (score >= 70) return 'B';
@@ -23,68 +25,112 @@ function grade(score: number): string {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 90) return 'var(--score-great)';
-  if (score >= 75) return 'var(--score-good)';
-  if (score >= 60) return 'var(--score-ok)';
-  if (score >= 40) return 'var(--score-warn)';
-  return 'var(--score-bad)';
+  if (score >= 90) return '#22c55e';
+  if (score >= 75) return '#84cc16';
+  if (score >= 60) return '#eab308';
+  if (score >= 40) return '#f97316';
+  return '#ef4444';
 }
 
 export function ScoreGauge({ score, size = 180 }: Props) {
-  const radius = (size - 24) / 2;
-  const circumference = Math.PI * radius; // half circle
-  const progress = (score / 100) * circumference;
+  const strokeWidth = Math.max(8, size * 0.055);
+  const radius = (size - strokeWidth * 2) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = circumference - (score / 100) * circumference;
   const color = scoreColor(score);
+  const cls = scoreClass(score);
+
+  // Animated counter
+  const [displayScore, setDisplayScore] = useState(0);
+  const frameRef = useRef<number>(0);
+
+  useEffect(() => {
+    const duration = 1200;
+    const start = performance.now();
+    const animate = (now: number) => {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplayScore(Math.round(eased * score));
+      if (t < 1) {
+        frameRef.current = requestAnimationFrame(animate);
+      }
+    };
+    frameRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [score]);
 
   return (
-    <div className={styles.wrapper} style={{ width: size, height: size / 2 + 40 }}>
+    <div className={styles.wrapper} style={{ width: size, height: size }}>
+      {/* Ambient glow behind the ring */}
+      <div
+        className={styles.glow}
+        style={{
+          background: `radial-gradient(circle, ${color}20 0%, transparent 70%)`,
+        }}
+      />
+
       <svg
         width={size}
-        height={size / 2 + 8}
-        viewBox={`0 0 ${size} ${size / 2 + 8}`}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
         className={styles.svg}
         aria-label={`Health score: ${score} out of 100`}
         role="img"
       >
-        {/* Track */}
-        <path
-          d={describeArc(size / 2, size / 2, radius, -180, 0)}
+        {/* Background track ring */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
           fill="none"
-          stroke="var(--bg-elevated)"
-          strokeWidth={10}
-          strokeLinecap="round"
+          stroke="rgba(255,255,255,0.04)"
+          strokeWidth={strokeWidth}
         />
-        {/* Progress */}
-        <path
-          d={describeArc(size / 2, size / 2, radius, -180, 0)}
+        {/* Subtle tick marks */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="rgba(255,255,255,0.02)"
+          strokeWidth={strokeWidth + 4}
+          strokeDasharray={`1 ${(circumference - 100) / 100}`}
+        />
+        {/* Animated progress ring */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
           fill="none"
           stroke={color}
-          strokeWidth={10}
+          strokeWidth={strokeWidth}
           strokeLinecap="round"
-          strokeDasharray={`${progress} ${circumference}`}
-          className={styles.progress}
-          style={{ filter: `drop-shadow(0 0 8px ${color})` }}
+          strokeDasharray={circumference}
+          strokeDashoffset={progress}
+          className={styles.progressRing}
+          style={{
+            '--circumference': `${circumference}`,
+            filter: `drop-shadow(0 0 6px ${color}80)`,
+            transformOrigin: '50% 50%',
+            transform: 'rotate(-90deg)',
+          } as React.CSSProperties}
         />
       </svg>
 
-      <div className={styles.scoreText}>
-        <span className={styles.scoreNumber} style={{ color }}>{score}</span>
+      {/* Center score display */}
+      <div className={styles.center}>
+        <span className={styles.scoreNumber} style={{ color }}>
+          {displayScore}
+        </span>
         <span className={styles.scoreMax}>/100</span>
       </div>
-      <div className={`badge badge-${scoreClass(score)} ${styles.grade}`}>
+
+      {/* Grade badge */}
+      <div className={`${styles.gradeBadge} ${styles[`grade_${cls}`] ?? ''}`}>
         {grade(score)}
       </div>
     </div>
   );
-}
-
-function describeArc(cx: number, cy: number, r: number, startDeg: number, endDeg: number): string {
-  const start = polarToCartesian(cx, cy, r, endDeg);
-  const end = polarToCartesian(cx, cy, r, startDeg);
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 1 0 ${end.x} ${end.y}`;
-}
-
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-  const angle = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
 }

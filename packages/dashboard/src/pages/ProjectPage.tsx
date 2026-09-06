@@ -25,6 +25,7 @@ export function ProjectPage() {
   const [report, setReport] = useState<VitalityReport | null>(null);
   const [history, setHistory] = useState<ScoreHistoryPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [badgeCopied, setBadgeCopied] = useState(false);
@@ -33,6 +34,7 @@ export function ProjectPage() {
   useEffect(() => {
     if (!owner || !repo) return;
     setLoading(true);
+    setError(null);
     Promise.all([
       fetchProjectReport(owner, repo),
       fetchProjectHistory(owner, repo),
@@ -40,6 +42,10 @@ export function ProjectPage() {
       .then(([rep, hist]) => {
         setReport(rep);
         setHistory(hist);
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'Failed to retrieve repository data.';
+        setError(msg);
       })
       .finally(() => setLoading(false));
   }, [owner, repo]);
@@ -87,11 +93,11 @@ export function ProjectPage() {
     );
   }
 
-  if (!report) {
+  if (error || !report) {
     return (
       <div className={styles.errorContainer}>
-        <h2>Project Not Found</h2>
-        <p>Could not retrieve health analysis for {owner}/{repo}.</p>
+        <h2>{error ? 'Unable to Load Repository' : 'Project Not Found'}</h2>
+        <p>{error ?? `Could not retrieve health analysis for ${owner}/${repo}.`}</p>
         <Link to="/" className={styles.backBtn}>Back to Search</Link>
       </div>
     );
@@ -104,7 +110,7 @@ export function ProjectPage() {
       score: report.maintenance.score,
       breakdown: report.maintenance.breakdown,
       metrics: [
-        { label: 'Issue Response', value: `${report.maintenance.issue_response ?? 12}h avg` },
+        { label: 'Issue Response', value: `${report.maintenance.issue_response != null ? Math.round(report.maintenance.issue_response) : 12}h avg` },
         { label: 'PR Response', value: `${report.maintenance.pull_request_response ?? 24}h avg` },
         { label: 'Release Days', value: `Every ${report.maintenance.release_frequency ?? 14}d` },
         { label: 'Backlog Trend', value: report.maintenance.backlog_trend ?? 'stable' },
@@ -179,6 +185,13 @@ export function ProjectPage() {
             <span>Window: 90 Rolling Days</span>
             <span>·</span>
             <span className={styles.versionBadge}>Protocol v{report.protocol_version}</span>
+            <span>·</span>
+            <span className={`${styles.dataSourceBadge} ${report.data_source === 'github-live' ? styles.dsLive : report.data_source === 'backend-api' ? styles.dsApi : styles.dsCache}`}>
+              {report.data_source === 'github-live' ? '🟢 Live GitHub Data'
+                : report.data_source === 'backend-api' ? '🔵 Backend API'
+                : report.data_source === 'rate-limited-cache' ? '🟡 Cached (rate limit)'
+                : '🔴 Error'}
+            </span>
           </div>
 
           <div className={styles.actions}>
@@ -214,7 +227,7 @@ export function ProjectPage() {
             icon="⚡"
           />
           <div className={styles.dimSummary}>
-            <span>Issue triage: {report.maintenance.issue_response ?? 14}h</span>
+            <span>Issue triage: {report.maintenance.issue_response != null ? Math.round(report.maintenance.issue_response) : 14}h</span>
             <span>PR review: {report.maintenance.pull_request_response ?? 28}h</span>
           </div>
         </div>
