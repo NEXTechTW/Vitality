@@ -97,11 +97,33 @@ export function ProjectPage() {
   }
 
   if (error || !report) {
+    const isRateLimitOrAuth =
+      error?.toLowerCase().includes('rate limit') ||
+      error?.toLowerCase().includes('token') ||
+      error?.toLowerCase().includes('credentials') ||
+      error?.toLowerCase().includes('401') ||
+      error?.toLowerCase().includes('403');
+
     return (
       <div className={styles.errorContainer}>
         <h2>{error ? 'Unable to Load Repository' : 'Project Not Found'}</h2>
         <p>{error ?? `Could not retrieve health analysis for ${owner}/${repo}.`}</p>
-        <Link to="/" className={styles.backBtn}>Back to Search</Link>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+          <Link to="/" className={styles.backBtn}>Back to Search</Link>
+          {isRateLimitOrAuth && (
+            <button
+              type="button"
+              className={styles.backBtn}
+              onClick={() => {
+                const btn = document.getElementById('nav-token-btn');
+                if (btn) btn.click();
+              }}
+              style={{ background: '#4f46e5' }}
+            >
+              🔑 Configure GitHub Token
+            </button>
+          )}
+        </div>
       </div>
     );
   }
