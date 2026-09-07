@@ -23,19 +23,29 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js (no install needed — uses built-in node:https)
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Compute score using dashboard algorithm
         id: score
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RESULT=$(node scripts/compute-badge-score.mjs NEXTechTW/Vitality)
-          echo "Full result: $RESULT"
-          SCORE=$(echo "$RESULT" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).score));")
+          # Use the real scoring engine via the CLI so the badge matches the dashboard exactly
+          node --import tsx/esm packages/cli/src/bin.ts analyze NEXTechTW/Vitality \
+            --output /tmp/vitality.json \
+            --window 90
+          SCORE=$(node -e "process.stdout.write(String(JSON.parse(require('fs').readFileSync('/tmp/vitality.json','utf8')).score))")
           echo "score=$SCORE" >> "$GITHUB_OUTPUT"
           echo "Computed score: $SCORE"
 
@@ -43,11 +53,11 @@ jobs:
         run: |
           SCORE="${{ steps.score.outputs.score }}"
 
-          # Pick badge colour to match dashboard logic
+          # Colour thresholds match badge.ts scoreColor() exactly
           if [ "$SCORE" -ge 90 ]; then COLOR="22c55e"
-          elif [ "$SCORE" -ge 80 ]; then COLOR="84cc16"
-          elif [ "$SCORE" -ge 70 ]; then COLOR="eab308"
-          elif [ "$SCORE" -ge 50 ]; then COLOR="f97316"
+          elif [ "$SCORE" -ge 75 ]; then COLOR="84cc16"
+          elif [ "$SCORE" -ge 60 ]; then COLOR="eab308"
+          elif [ "$SCORE" -ge 40 ]; then COLOR="f97316"
           else COLOR="ef4444"
           fi
 
@@ -77,3 +87,4 @@ jobs:
           # Only commit if README actually changed
           git diff --cached --quiet || git commit -m "chore: update Vitality badge score [skip ci]"
           git push
+
