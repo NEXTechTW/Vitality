@@ -30,14 +30,25 @@ function ghFetch(path) {
         Accept: 'application/vnd.github+json',
         Authorization: `Bearer ${token}`,
         'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'vitality-badge-bot/1.0',
       },
     };
     https.get(options, (res) => {
       let body = '';
       res.on('data', (d) => (body += d));
       res.on('end', () => {
-        try { resolve(JSON.parse(body)); }
-        catch { resolve(null); }
+        const status = res.statusCode;
+        // 202 = GitHub is still computing stats; treat as empty (not an error)
+        if (status === 202) { resolve(null); return; }
+        if (status === 204) { resolve(null); return; }
+        let parsed = null;
+        try { parsed = JSON.parse(body); } catch { /* ignore */ }
+        if (status < 200 || status >= 300) {
+          const msg = parsed?.message ?? body.slice(0, 200) ?? `HTTP ${status}`;
+          reject(new Error(`GitHub API HTTP ${status} for ${path}: ${msg}`));
+          return;
+        }
+        resolve(parsed);
       });
     }).on('error', reject);
   });
@@ -47,8 +58,8 @@ async function main() {
   const now = Date.now();
 
   const repoData = await ghFetch(`/repos/${owner}/${repo}`);
-  if (!repoData || repoData.message) {
-    console.error('GitHub API error:', repoData?.message ?? 'unknown');
+  if (!repoData) {
+    console.error('GitHub API error: repo endpoint returned no data (possible 202/empty response)');
     process.exit(1);
   }
 
